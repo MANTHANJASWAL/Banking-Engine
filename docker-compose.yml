@@ -1,0 +1,54 @@
+# Author: Manthan Jaswal (Roll: 3235)
+# Date: 30/1/26
+
+version: '3.8'
+
+services:
+  banking-engine-app:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-db:3306/banking_engine?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=masterm@24
+      - SPRING_DATA_REDIS_HOST=redis-cache
+      - SPRING_DATA_REDIS_PORT=6379
+    depends_on:
+      mysql-db:
+        condition: service_healthy
+      redis-cache:
+        condition: service_started
+    networks:
+      - banking-network
+
+  mysql-db:
+    image: mysql:8.0
+    ports:
+      - "3307:3306"
+    environment:
+      - MYSQL_DATABASE=banking_engine
+      - MYSQL_ROOT_PASSWORD=masterm@24
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - banking-network
+    volumes:
+      - mysql-data:/var/lib/mysql
+
+  redis-cache:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    networks:
+      - banking-network
+
+networks:
+  banking-network:
+    driver: bridge
+
+volumes:
+  mysql-data:
